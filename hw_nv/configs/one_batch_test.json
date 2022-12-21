@@ -83,7 +83,7 @@
     "save_period": 5,
     "verbosity": 2,
     "monitor": "min val_loss",
-    "early_stop": 100,
+    "early_stop": 1000,
     "visualize": "wandb",
     "wandb_project": "nv_project",
     "grad_norm_clip": 100,

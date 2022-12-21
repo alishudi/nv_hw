@@ -135,7 +135,9 @@ class Trainer(BaseTrainer):
         log = last_train_metrics
         self.model_gen.eval()
         self.model_disc.eval()
-        # self._log_predictions()
+        self.lr_scheduler_gen.step()
+        self.lr_scheduler_disc.step()
+        self._log_predictions()
 
         return log
 

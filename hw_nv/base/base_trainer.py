@@ -155,17 +155,13 @@ class BaseTrainer:
             "monitor_best": self.mnt_best,
             "config": self.config,
         }
-        filename = str(self.checkpoint_dir / "checkpoint-epoch{}.pth".format(epoch))
+        #hard to define best for GANs, so i just save last (dont want to save all, cause they weight a lot)
+        filename = str(self.checkpoint_dir / "checkpoint-last.pth")
         config_path = str (self.checkpoint_dir / "config.json")
-        if not (only_best and save_best):
-            torch.save(state, filename)
-            self.logger.info("Saving checkpoint: {} ...".format(filename))
-            self.writer.add_checkpoint(filename, config_path)
-        if save_best:
-            best_path = str(self.checkpoint_dir / "model_best.pth")
-            torch.save(state, best_path)
-            self.logger.info("Saving current best: model_best.pth ...")
-            self.writer.add_checkpoint(best_path, config_path)
+        torch.save(state, filename)
+        self.logger.info("Saving checkpoint: {} ...".format(filename))
+        self.writer.add_checkpoint(filename, config_path)
+
 
     def _resume_checkpoint(self, resume_path):
         """
@@ -220,8 +216,8 @@ class BaseTrainer:
 
         # load architecture params from checkpoint.
         if (
-            checkpoint["config"]["arch_gen"] != self.config["arch_gen"] or
-            checkpoint["config"]["arch_disc"] != self.config["arch_disc"]
+            checkpoint["config"]["arch_gen"] != self.config["generator"] or
+            checkpoint["config"]["arch_disc"] != self.config["discriminator"]
         ):
             self.logger.warning(
                 "Warning: Architecture configuration given in config file is different from that "
