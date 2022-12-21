@@ -67,7 +67,6 @@ class Generator(nn.Module):
         for l in range(len(k_u)):
             out_channels = h_u // (2 ** (l+1))
             layers.append(nn.LeakyReLU(0.1))
-            # print('ku', k_u[l]/2)
             layers.append(weight_norm(nn.ConvTranspose1d(
                 in_channels=out_channels * 2,
                 out_channels=out_channels,
@@ -87,7 +86,9 @@ class Generator(nn.Module):
 
 
     def forward(self, x):
+        print(f'pre conv shape {x.shape}')
         x = self.conv_in(x)
+        print(f'1 conv shape {x.shape}')
         x = self.blocks(x)
         x = F.tanh(self.conv_out(F.leaky_relu(x, 0.1)))
         return x
