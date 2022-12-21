@@ -10,7 +10,7 @@
     },
     "log_spec": true
   },
-  "arch_gen": {
+  "arch": {
     "generator": {
       "type": "Generator",
       "args": {
