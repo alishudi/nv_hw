@@ -58,7 +58,7 @@ class Generator(nn.Module):
         self.conv_in = weight_norm(nn.Conv1d(
             in_channels=80,
             out_channels=h_u,
-            kernel_size=7,
+            kernel_size=(7,),
             stride=1,
             padding='same'
             ))
@@ -77,34 +77,11 @@ class Generator(nn.Module):
             layers.append(MRF(out_channels, D_r, K_r))
         self.blocks = nn.Sequential(*layers)
 
-        # in_channels = h_u
-        # out_channels = h_u // (2)
-        # self.l1 = (nn.LeakyReLU(0.1))
-        # self.l2 = weight_norm(nn.ConvTranspose1d(
-        #         in_channels=in_channels,
-        #         out_channels=out_channels,
-        #         kernel_size=(k_u[0],1),
-        #         stride=k_u[0]//2,
-        #         padding=(k_u[0]-k_u[0]//2)//2
-        #     ))
-        # self.l3 = MRF(out_channels, D_r, K_r)
-        # in_channels = out_channels
-        # out_channels = out_channels // (2)
-        # self.l4 = (nn.LeakyReLU(0.1))
-        # self.l5 = weight_norm(nn.ConvTranspose1d(
-        #         in_channels=out_channels * 2,
-        #         out_channels=out_channels,
-        #         kernel_size=(k_u[1],1),
-        #         stride=k_u[1]//2,
-        #         padding=(k_u[1]-k_u[1]//2)//2
-        #     ))
-        # self.l6 = MRF(out_channels, D_r, K_r)
-
 
         self.conv_out = weight_norm(nn.Conv1d(
                 in_channels=out_channels,
                 out_channels=1,
-                kernel_size=(7,1),
+                kernel_size=(7,),
                 padding='same'
                 ))
 
