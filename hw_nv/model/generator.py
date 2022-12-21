@@ -74,7 +74,7 @@ class Generator(nn.Module):
                 stride=k_u[l]/2
             )))
             layers.append(MRF(out_channels, D_r, K_r))
-        self.blocks = nn.ModuleList(layers)
+        self.blocks = nn.Sequential(layers)
 
         self.conv_out = weight_norm(nn.Conv1d(
                 in_channels=out_channels,
