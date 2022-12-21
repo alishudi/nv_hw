@@ -140,6 +140,8 @@ class Trainer(BaseTrainer):
 
         #training discriminator
         batch["true_mels"] = self.melspec(batch["true_wavs"]).squeeze(dim=1)
+        print(f'true_wavs {batch["true_wavs"].shape}')
+        print(f'true_mels {batch["true_mels"].shape}')
         batch["gen_wavs"] = self.model_gen(batch["true_mels"])
         batch["gen_mels"] = self.melspec(batch["gen_wavs"])
 
