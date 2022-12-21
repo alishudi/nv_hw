@@ -11,6 +11,7 @@ class Discriminator(nn.Module):
 
 
     def forward(self, y_false, y_true):
+        print(f'true shape {y_true.shape}, false shape {y_false.shape}')
         mpd_f_preds, mpd_f_fmaps = self.mpd(y_false)
         mpd_t_preds, mpd_t_fmaps = self.mpd(y_true)
         msd_f_preds, msd_f_fmaps = self.msd(y_false)
