@@ -146,7 +146,7 @@ class Trainer(BaseTrainer):
         # if is_train:
         self.optimizer_disc.zero_grad()
 
-        batch["mpd_f_preds"], batch["msd_f_preds"], batch["mpd_t_preds"], batch["msd_t_preds"],
+        batch["mpd_f_preds"], batch["msd_f_preds"], batch["mpd_t_preds"], batch["msd_t_preds"],\
         batch["mpd_f_fmaps"], batch["msd_f_fmaps"], batch["mpd_t_fmaps"], batch["msd_t_fmaps"] \
             = self.model_disc(batch["true_wavs"], batch["gen_wavs"].detach())
 
