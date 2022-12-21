@@ -67,6 +67,7 @@ class Generator(nn.Module):
         for l in range(len(k_u)):
             out_channels = h_u // (2 ** (l+1))
             layers.append(nn.LeakyReLU(0.1))
+            print('ku', k_u[l]/2)
             layers.append(weight_norm(nn.ConvTranspose1d(
                 in_channels=out_channels * 2,
                 out_channels=out_channels,
