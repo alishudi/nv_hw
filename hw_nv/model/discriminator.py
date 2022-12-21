@@ -1,6 +1,5 @@
 from torch import nn
-from mpd import MPD
-from msd import MSD
+from hw_nv.model import MSD, MPD
 
 
 class Discriminator(nn.Module):
