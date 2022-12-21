@@ -54,7 +54,7 @@ class Trainer(BaseTrainer):
 
         self.train_metrics = MetricTracker(
             "mpd_loss", "msd_loss", "disc_loss", "adv_loss", "mel_loss", "fm_loss",
-            "gen_loss", "grad norm", writer=self.writer
+            "gen_loss", "grad norm gen", "grad norm disc", writer=self.writer
         )
         self.melspec = MelSpectrogram(MelSpectrogramConfig, device)
 
