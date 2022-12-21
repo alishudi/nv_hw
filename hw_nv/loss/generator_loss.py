@@ -7,8 +7,8 @@ class GeneratorLoss(nn.Module):
         super().__init__()
         self.l1_loss = nn.L1Loss()
 
-    def forward(self, mpd_f_preds, msd_f_preds, gen_mels, true_mels, mpd_f_maps, msd_f_fmaps,
-                mpd_t_maps, msd_t_fmaps, **batch):
+    def forward(self, mpd_f_preds, msd_f_preds, gen_mels, true_mels, mpd_f_fmaps, msd_f_fmaps,
+                mpd_t_fmaps, msd_t_fmaps, **batch):
 
         adv_loss = 0
         for subdiscr_preds in mpd_f_preds + msd_f_preds: #discriminators return list of preds of all subdiscriminators need to sum them
@@ -16,7 +16,7 @@ class GeneratorLoss(nn.Module):
         
         mel_loss = self.l1_loss(gen_mels, true_mels)
 
-        gen_fmaps, true_fmaps = mpd_f_maps + msd_f_fmaps, mpd_t_maps + msd_t_fmaps
+        gen_fmaps, true_fmaps = mpd_f_fmaps + msd_f_fmaps, mpd_t_fmaps + msd_t_fmaps
         fm_loss = 0
         for subdiscr_f_fmap, subdiscr_t_fmap in zip(gen_fmaps, true_fmaps):
             for f_layer, t_layer in zip(subdiscr_f_fmap, subdiscr_t_fmap):
