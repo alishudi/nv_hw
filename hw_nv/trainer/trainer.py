@@ -12,7 +12,8 @@ from tqdm import tqdm
 
 from hw_nv.base import BaseTrainer
 from hw_nv.logger.utils import plot_spectrogram_to_buf
-from hw_nv.utils import inf_loop, MetricTracker, MelSpectrogram, MelSpectrogramConfig
+from hw_nv.utils import inf_loop, MetricTracker
+from hw_nv.utils.melspectrogram import MelSpectrogram, MelSpectrogramConfig
 
 
 class Trainer(BaseTrainer):
