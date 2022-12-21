@@ -55,7 +55,7 @@ class Trainer(BaseTrainer):
         self.train_metrics = MetricTracker(
             "loss", "grad norm", "mel_loss", writer=self.writer #todo add losses
         )
-        self.melspec = MelSpectrogram(MelSpectrogramConfig)
+        self.melspec = MelSpectrogram(MelSpectrogramConfig, device)
 
     @staticmethod
     def move_batch_to_device(batch, device: torch.device):

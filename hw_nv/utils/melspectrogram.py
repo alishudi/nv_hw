@@ -25,7 +25,7 @@ class MelSpectrogramConfig:
 
 class MelSpectrogram(nn.Module):
 
-    def __init__(self, config: MelSpectrogramConfig):
+    def __init__(self, config: MelSpectrogramConfig, device):
         super(MelSpectrogram, self).__init__()
 
         self.config = config
@@ -38,7 +38,7 @@ class MelSpectrogram(nn.Module):
             f_min=config.f_min,
             f_max=config.f_max,
             n_mels=config.n_mels
-        )
+        ).to(device)
 
         # The is no way to set power in constructor in 0.5.0 version.
         self.mel_spectrogram.spectrogram.power = config.power
