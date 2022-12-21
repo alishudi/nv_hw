@@ -10,11 +10,11 @@ class DiscriminatorLoss(nn.Module):
     def forward(self, mpd_t_preds, msd_t_preds, mpd_f_preds, msd_f_preds, **batch):
 
         mpd_loss = 0
-        for subdiscr_t_pred, subdiscr_f_pred in (mpd_t_preds, mpd_f_preds): #iterating over preds of subdiscriminators
+        for subdiscr_t_pred, subdiscr_f_pred in zip(mpd_t_preds, mpd_f_preds): #iterating over preds of subdiscriminators
             mpd_loss += torch.mean(torch.square(subdiscr_t_pred - 1) + torch.square(subdiscr_f_pred))
 
         msd_loss = 0
-        for subdiscr_t_pred, subdiscr_f_pred in (msd_t_preds, msd_f_preds):
+        for subdiscr_t_pred, subdiscr_f_pred in zip(msd_t_preds, msd_f_preds):
             msd_loss += torch.mean(torch.square(subdiscr_t_pred - 1) + torch.square(subdiscr_f_pred))
 
         return mpd_loss, msd_loss
