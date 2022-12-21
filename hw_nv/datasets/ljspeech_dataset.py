@@ -3,6 +3,7 @@ import os
 
 from hw_nv.utils import ROOT_PATH
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torchaudio
@@ -26,7 +27,7 @@ class LJspeechDataset(Dataset):
     def __getitem__(self, idx):
         wav = self.buffer[idx]['true_wavs']
         if wav.shape[1] > self.segment_size:
-            l = torch.randint(0, wav.shape[1] - self.segment_size)
+            l = np.random.randint(0, wav.shape[1] - self.segment_size)
             r = l + self.segment_size
             wav = wav[:,l:r]
         elif wav.shape[1] < self.segment_size:
