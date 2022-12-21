@@ -216,8 +216,8 @@ class BaseTrainer:
 
         # load architecture params from checkpoint.
         if (
-            checkpoint["config"]["arch_gen"] != self.config["generator"] or
-            checkpoint["config"]["arch_disc"] != self.config["discriminator"]
+            checkpoint["config"]["generator"] != self.config["generator"] or
+            checkpoint["config"]["discriminator"] != self.config["discriminator"]
         ):
             self.logger.warning(
                 "Warning: Architecture configuration given in config file is different from that "
