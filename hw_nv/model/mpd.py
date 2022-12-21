@@ -30,8 +30,10 @@ class MPD_subdiscr(nn.Module):
     def forward(self, x):
         fmap = []
         bs, ch, t = x.shape
+        # print(f'shape {x.shape}')
         x = F.pad(x, (0, (self.p - t % self.p) % self.p), "reflect")
-        x.view(bs, ch, -1, self.p) 
+        x = x.view(bs, ch, -1, self.p) 
+        # print(f'post shape {x.shape}')
         for module in self.layers:
             x = F.leaky_relu(module(x), 0.1)
             fmap.append(x)
