@@ -32,6 +32,7 @@ class LJspeechDataset(Dataset):
             wav = wav[:,l:r]
         elif wav.shape[1] < self.segment_size:
             wav = F.pad(wav, (0, self.segment_size - wav.shape[1]))
+        print(f'wav shape {wav.shape}')
         return {'true_wavs': wav}
 
     def get_data_to_buffer(self):
