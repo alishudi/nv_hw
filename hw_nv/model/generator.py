@@ -73,7 +73,7 @@ class Generator(nn.Module):
                 out_channels=out_channels,
                 kernel_size=(k_u[l],1),
                 stride=k_u[l]//2,
-                padding='same'
+                padding=k_u[l]//4
             )))
             layers.append(MRF(out_channels, D_r, K_r))
         self.blocks = nn.Sequential(*layers)
