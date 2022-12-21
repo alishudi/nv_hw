@@ -153,7 +153,7 @@ class BaseTrainer:
             "optimizer_gen": self.optimizer_gen.state_dict(),
             "optimizer_disc": self.optimizer_disc.state_dict(),
             "monitor_best": self.mnt_best,
-            "config": self.config,
+            "config": self.config.config,
         }
         #hard to define best for GANs, so i just save last (dont want to save all, cause they weight a lot)
         filename = str(self.checkpoint_dir / "checkpoint-last.pth")
@@ -217,8 +217,7 @@ class BaseTrainer:
         # load architecture params from checkpoint.
         print(checkpoint["config"])
         if (
-            checkpoint["config"]["generator"] != self.config["generator"] or
-            checkpoint["config"]["discriminator"] != self.config["discriminator"]
+            checkpoint["config"]["arch"] != self.config["arch"]
         ):
             self.logger.warning(
                 "Warning: Architecture configuration given in config file is different from that "
