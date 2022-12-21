@@ -10,24 +10,20 @@
     },
     "log_spec": true
   },
-  "arch": {
+  "arch_gen": {
     "generator": {
       "type": "Generator",
       "args": {
-        "model_config": {
-          "D_r": [[1, 1], [3, 1], [5, 1]],
-          "K_r": [3, 7, 11],
-          "k_u": [16, 16, 4, 4],
-          "h_u": 512
-        }
+        "D_r": [[1, 1], [3, 1], [5, 1]],
+        "K_r": [3, 7, 11],
+        "k_u": [16, 16, 4, 4],
+        "h_u": 512
       }
     },
     "discriminator": {
       "type": "Discriminator",
       "args": {
-        "model_config": {
-          "periods": [2, 3, 5, 7, 11]
-        }
+        "periods": [2, 3, 5, 7, 11]
       }
     }
   },
