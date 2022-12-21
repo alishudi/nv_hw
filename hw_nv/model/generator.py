@@ -23,7 +23,6 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         i = 0
-        print(f'pre resblock shape {x.shape}')
         for m in range(len(self.d_r)):
             res = x
             for l in range(len(self.d_r[m])):
@@ -31,7 +30,6 @@ class ResBlock(nn.Module):
                 x = self.resblock[i](x)
                 i += 1
             x += res
-        print(f'post resblock shape {x.shape}')
         return x
 
     def remove_weight_norm(self):
@@ -90,9 +88,7 @@ class Generator(nn.Module):
 
     def forward(self, x):
         x = self.conv_in(x)
-        print(f'pre up shape {x.shape}')
         x = self.blocks(x)
-        print(f'post up shape {x.shape}')
         x = F.tanh(self.conv_out(F.leaky_relu(x, 0.1)))
         return x
 
