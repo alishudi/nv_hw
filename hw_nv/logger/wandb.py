@@ -60,7 +60,7 @@ class WanDBWriter:
         }, step=self.step)
 
     def add_audio(self, scalar_name, audio, sample_rate=None):
-        # audio = audio.detach().cpu().numpy().T
+        audio = audio.detach().cpu().numpy().T
         self.wandb.log({
             self._scalar_name(scalar_name): self.wandb.Audio(audio, sample_rate=sample_rate)
         }, step=self.step)

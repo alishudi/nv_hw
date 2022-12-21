@@ -14,6 +14,7 @@ from hw_nv.base import BaseTrainer
 from hw_nv.logger.utils import plot_spectrogram_to_buf
 from hw_nv.utils import inf_loop, MetricTracker
 from hw_nv.utils.melspectrogram import MelSpectrogram, MelSpectrogramConfig
+import torchaudio
 
 
 class Trainer(BaseTrainer):
@@ -57,6 +58,10 @@ class Trainer(BaseTrainer):
             "gen_loss", "grad norm gen", "grad norm disc", writer=self.writer
         )
         self.melspec = MelSpectrogram(MelSpectrogramConfig, device)
+
+        self.test_paths = ['test_audio/audio_1.wav', 'test_audio/audio_2.wav', 'test_audio/audio_3.wav']
+        self.test_wavs = [torchaudio.load(path)[0] for path in self.test_paths]
+        self.test_mels = [self.melspec(wav) for wav in self.test_wavs]
 
     @staticmethod
     def move_batch_to_device(batch, device: torch.device):
@@ -118,8 +123,8 @@ class Trainer(BaseTrainer):
                 self.writer.add_scalar(
                     "learning rate", self.lr_scheduler_gen.get_last_lr()[0]
                 )
-                # self._log_spectrogram(batch["true_mels"])
-                # self._log_spectrogram(batch["gen_mels"])
+                self._log_spectrogram(batch["true_mels"])
+                self._log_spectrogram(batch["gen_mels"])
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
                 # because we are interested in recent train metrics
@@ -185,15 +190,14 @@ class Trainer(BaseTrainer):
         return base.format(current, total, 100.0 * current / total)
 
     def _log_predictions(self):
-        # if self.writer is None:
-        #     return
-        # for speed in [0.8, 1., 1.3]:
-        #     for i, phn in tqdm(enumerate(self.encoded_test)):
-        #         mel, path = synthesis(self.model, phn, self.device, self.waveglow, i, speed)
-        #         name = f'i={i} s={speed}'
-        #         self._log_audio('audio ' + name, path)
-        #         image = PIL.Image.open(plot_spectrogram_to_buf(mel.detach().cpu().numpy().squeeze(0).transpose(-1, -2)))
-        #         self.writer.add_image('melspec ' + name, ToTensor()(image))
+        if self.writer is None:
+            return
+        for i, mel in enumerate(self.test_mels):
+            gen_wav = self.model_gen(mel)
+            self.writer.add_audio(f"audio_{i}", gen_wav, sample_rate=22050)
+            mel = self.melspec(gen_wav)
+            image = PIL.Image.open(plot_spectrogram_to_buf(mel.detach().cpu().numpy().squeeze(0).transpose(-1, -2)))
+            self.writer.add_image(f'melspec_{i}', ToTensor()(image))
         return
 
 
@@ -222,6 +226,3 @@ class Trainer(BaseTrainer):
             return
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
-
-    def _log_audio(self, name, audio_path):
-        self.writer.add_audio(name, audio_path, sample_rate=22050)
