@@ -23,6 +23,7 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         i = 0
+        print(f'pre resblock shape {x.shape}')
         for m in range(len(self.d_r)):
             res = x
             for l in range(len(self.d_r[m])):
@@ -30,6 +31,7 @@ class ResBlock(nn.Module):
                 x = self.resblock[i](x)
                 i += 1
             x += res
+        print(f'post resblock shape {x.shape}')
         return x
 
     def remove_weight_norm(self):
