@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from hw_nv.base import BaseTrainer
 from hw_nv.logger.utils import plot_spectrogram_to_buf
-from hw_nv.utils import inf_loop, MetricTracker
+from hw_nv.utils import inf_loop, MetricTracker, MelSpectrogram, MelSpectrogramConfig
 
 
 class Trainer(BaseTrainer):
@@ -36,7 +36,7 @@ class Trainer(BaseTrainer):
             len_epoch=None,
             skip_oom=True,
     ):
-        super().__init__(model, criterion, optimizer, config, device)
+        super().__init__(generator, discriminator, criterion_gen, criterion_disc, optimizer_gen, optimizer_disc, config, device)
         self.skip_oom = skip_oom
         self.config = config
         self.train_dataloader = dataloaders["train"]
@@ -47,33 +47,31 @@ class Trainer(BaseTrainer):
             # iteration-based training
             self.train_dataloader = inf_loop(self.train_dataloader)
             self.len_epoch = len_epoch
-        self.lr_scheduler = lr_scheduler
+        self.lr_scheduler_gen = lr_scheduler_gen
+        self.lr_scheduler_disc = lr_scheduler_disc
         self.log_step = 50
 
         self.train_metrics = MetricTracker(
             "loss", "grad norm", "mel_loss", writer=self.writer #todo add losses
         )
+        self.melspec = MelSpectrogram(MelSpectrogramConfig)
 
     @staticmethod
     def move_batch_to_device(batch, device: torch.device):
         """
         Move all necessary tensors to the GPU
         """
-        #todo fix
-        batch["src_seq"] = torch.stack([sample.long() for sample in batch["src_seq"]]).to(device).squeeze(0)
-        batch["mel_target"] = torch.stack([sample.float() for sample in batch["mel_target"]]).to(device).squeeze(0)
-        batch["duration"] = torch.stack([sample.int() for sample in batch["duration"]]).to(device).squeeze(0)
-        batch["mel_pos"] = torch.stack([sample.long() for sample in batch["mel_pos"]]).to(device).squeeze(0)
-        batch["src_pos"] = torch.stack([sample.long() for sample in batch["src_pos"]]).to(device).squeeze(0)
-        batch["mel_max_len"] = batch["mel_max_len"][0]
-        batch["energy"] = torch.stack([sample.float() for sample in batch["energy"]]).to(device).squeeze(0)
-        batch["pitch"] = torch.stack([sample.float() for sample in batch["pitch"]]).to(device).squeeze(0)
+        for tensor_for_gpu in ["wav"]:
+            batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 
     def _clip_grad_norm(self):
         if self.config["trainer"].get("grad_norm_clip", None) is not None:
             clip_grad_norm_(
-                self.model.parameters(), self.config["trainer"]["grad_norm_clip"]
+                self.model_gen.parameters(), self.config["trainer"]["grad_norm_clip"]
+            )
+            clip_grad_norm_(
+                self.model_disc.parameters(), self.config["trainer"]["grad_norm_clip"]
             )
 
     def _train_epoch(self, epoch):
@@ -83,7 +81,8 @@ class Trainer(BaseTrainer):
         :param epoch: Integer, current training epoch.
         :return: A log that contains average loss and metric in this epoch.
         """
-        self.model.train()
+        self.model_gen.train()
+        self.model_disc.train()
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
         for batch_idx, batch in enumerate(
@@ -105,7 +104,8 @@ class Trainer(BaseTrainer):
                     continue
                 else:
                     raise e
-            self.train_metrics.update("grad norm", self.get_grad_norm())
+            self.train_metrics.update("grad norm gen", self.get_grad_norm(self.model_gen))
+            self.train_metrics.update("grad norm disc", self.get_grad_norm(self.model_disc))
             if batch_idx % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
                 self.logger.debug(
@@ -114,9 +114,10 @@ class Trainer(BaseTrainer):
                     )
                 )
                 self.writer.add_scalar(
-                    "learning rate", self.lr_scheduler.get_last_lr()[0]
+                    "learning rate", self.lr_scheduler_gen.get_last_lr()[0]
                 )
-                # self._log_spectrogram(batch["mel"])
+                # self._log_spectrogram(batch["true_mels"])
+                # self._log_spectrogram(batch["gen_mels"])
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
                 # because we are interested in recent train metrics
@@ -125,38 +126,50 @@ class Trainer(BaseTrainer):
             if batch_idx >= self.len_epoch:
                 break
         log = last_train_metrics
-        self.model.eval()
+        self.model_gen.eval()
+        self.model_disc.eval()
         # self._log_predictions()
 
         return log
 
     def process_batch(self, batch, is_train: bool, metrics: MetricTracker):
         batch = self.move_batch_to_device(batch, self.device)
-        if is_train:
-            self.optimizer.zero_grad()
-        mel_output, duration_predictor_output, energy_predictor_output, pitch_predictor_output = self.model(**batch)
-        batch["mel"] = mel_output
-        batch["duration_predicted"] = duration_predictor_output
-        batch["energy_predicted"] = energy_predictor_output
-        batch["pitch_predicted"] = pitch_predictor_output
-        batch["mel_loss"], batch["duration_loss"], batch["energy_loss"], batch["pitch_loss"] = self.criterion(**batch)
-        batch["energy_loss"] *= 0.01
-        batch["loss"] = batch["mel_loss"] + batch["duration_loss"] + batch["energy_loss"] + batch["pitch_loss"]
-        if is_train:
-            batch["loss"].backward()
-            self._clip_grad_norm()
-            self.optimizer.step()
-            if self.lr_scheduler is not None:
-                if self.config["lr_scheduler"]["type"] == "ReduceLROnPlateau":
-                    self.lr_scheduler.step(batch["loss"].item())
-                else:
-                    self.lr_scheduler.step()
+        if is_train == False:
+            raise NotImplementedError
 
-        metrics.update("loss", batch["loss"].item())
-        metrics.update("mel_loss", batch["mel_loss"].item())
-        metrics.update("duration_loss", batch["duration_loss"].item())
-        metrics.update("energy_loss", batch["energy_loss"].item())
-        metrics.update("pitch_loss", batch["pitch_loss"].item())
+        #training discriminator
+        batch["true_mels"] = self.melspec(batch["true_wavs"])
+        batch["gen_wavs"] = self.model_gen(batch["true_mels"])
+        batch["gen_mels"] = self.melspec(batch["gen_wavs"])
+
+        # if is_train:
+        self.optimizer_disc.zero_grad()
+
+        batch["mpd_f_preds"], batch["msd_f_preds"], batch["mpd_t_preds"], batch["msd_t_preds"],
+        batch["mpd_f_fmaps"], batch["msd_f_fmaps"], batch["mpd_t_fmaps"], batch["msd_t_fmaps"] \
+            = self.model_disc(batch["true_wavs"], batch["gen_wavs"].detach())
+
+        batch["mpd_loss"], batch["msd_loss"] = self.criterion_disc(**batch)
+        batch["disc_loss"] = batch["mpd_loss"] + batch["msd_loss"]
+        batch["disc_loss"].backward()
+        self._clip_grad_norm()
+        self.optimizer_disc.step()
+
+        #training generator
+        self.optimizer_gen.zero_grad()
+        batch["mpd_f_preds"], batch["msd_f_preds"], batch["mpd_t_preds"], batch["msd_t_preds"],
+        batch["mpd_f_fmaps"], batch["msd_f_fmaps"], batch["mpd_t_fmaps"], batch["msd_t_fmaps"] \
+            = self.model_disc(batch["true_wavs"], batch["gen_wavs"])
+        
+        batch["adv_loss"], batch["mel_loss"], batch["fm_loss"] = self.criterion_gen(**batch)
+        batch["gen_loss"] = batch["adv_loss"] + 2 * batch["fm_loss"] + 45 * batch["mel_loss"]
+        batch["gen_loss"].backward()
+        self._clip_grad_norm()
+        self.optimizer_gen.step()
+
+        for loss in ["mpd_loss", "msd_loss", "disc_loss", "adv_loss", "mel_loss", "fm_loss", "gen_loss"]:
+            metrics.update(loss, batch[loss].item())
+
         return batch
 
     def _progress(self, batch_idx):
@@ -170,15 +183,16 @@ class Trainer(BaseTrainer):
         return base.format(current, total, 100.0 * current / total)
 
     def _log_predictions(self):
-        if self.writer is None:
-            return
-        for speed in [0.8, 1., 1.3]:
-            for i, phn in tqdm(enumerate(self.encoded_test)):
-                mel, path = synthesis(self.model, phn, self.device, self.waveglow, i, speed)
-                name = f'i={i} s={speed}'
-                self._log_audio('audio ' + name, path)
-                image = PIL.Image.open(plot_spectrogram_to_buf(mel.detach().cpu().numpy().squeeze(0).transpose(-1, -2)))
-                self.writer.add_image('melspec ' + name, ToTensor()(image))
+        # if self.writer is None:
+        #     return
+        # for speed in [0.8, 1., 1.3]:
+        #     for i, phn in tqdm(enumerate(self.encoded_test)):
+        #         mel, path = synthesis(self.model, phn, self.device, self.waveglow, i, speed)
+        #         name = f'i={i} s={speed}'
+        #         self._log_audio('audio ' + name, path)
+        #         image = PIL.Image.open(plot_spectrogram_to_buf(mel.detach().cpu().numpy().squeeze(0).transpose(-1, -2)))
+        #         self.writer.add_image('melspec ' + name, ToTensor()(image))
+        return
 
 
 
@@ -188,8 +202,8 @@ class Trainer(BaseTrainer):
         self.writer.add_image("spectrogram", ToTensor()(image))
 
     @torch.no_grad()
-    def get_grad_norm(self, norm_type=2):
-        parameters = self.model.parameters()
+    def get_grad_norm(self, model, norm_type=2):
+        parameters = model.parameters()
         if isinstance(parameters, torch.Tensor):
             parameters = [parameters]
         parameters = [p for p in parameters if p.grad is not None]

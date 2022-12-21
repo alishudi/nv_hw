@@ -12,14 +12,18 @@ class BaseTrainer:
     Base class for all trainers
     """
 
-    def __init__(self, model: BaseModel, criterion, optimizer, config, device):
+    def __init__(self, model_gen: BaseModel, model_disc: BaseModel, criterion_gen, criterion_disc,
+                optimizer_gen, optimizer_disc, config, device):
         self.device = device
         self.config = config
         self.logger = config.get_logger("trainer", config["trainer"]["verbosity"])
 
-        self.model = model
-        self.criterion = criterion
-        self.optimizer = optimizer
+        self.model_gen = model_gen
+        self.model_disc = model_disc
+        self.criterion_gen = criterion_gen
+        self.criterion_disc = criterion_disc
+        self.optimizer_gen = optimizer_gen
+        self.optimizer_disc = optimizer_disc
 
         # for interrupt saving
         self._last_epoch = 0
@@ -70,7 +74,7 @@ class BaseTrainer:
         try:
             self._train_process()
         except KeyboardInterrupt as e:
-            self.logger.info("Saving model on keyboard interrupt")
+            self.logger.info("Saving models on keyboard interrupt")
             self._save_checkpoint(self._last_epoch, save_best=False)
             raise e
 
@@ -91,7 +95,7 @@ class BaseTrainer:
             for key, value in log.items():
                 self.logger.info("    {:15s}: {}".format(str(key), value))
 
-            # evaluate model performance according to configured metric,
+            # evaluate models performance according to configured metric,
             # save best checkpoint as model_best
             best = False
             if self.mnt_mode != "off":
@@ -138,12 +142,16 @@ class BaseTrainer:
         :param epoch: current epoch number
         :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
         """
-        arch = type(self.model).__name__
+        arch_gen = type(self.model_gen).__name__
+        arch_disc = type(self.model_disc).__name__
         state = {
-            "arch": arch,
+            "arch_gen": arch_gen,
+            "arch_disc": arch_disc,
             "epoch": epoch,
-            "state_dict": self.model.state_dict(),
-            "optimizer": self.optimizer.state_dict(),
+            "state_dict_gen": self.model_gen.state_dict(),
+            "state_dict_disc": self.model_disc.state_dict(),
+            "optimizer_gen": self.optimizer_gen.state_dict(),
+            "optimizer_disc": self.optimizer_disc.state_dict(),
             "monitor_best": self.mnt_best,
             "config": self.config,
         }
@@ -177,19 +185,23 @@ class BaseTrainer:
                 "Warning: Architecture configuration given in config file is different from that "
                 "of checkpoint. This may yield an exception while state_dict is being loaded."
             )
-        self.model.load_state_dict(checkpoint["state_dict"])
+        self.model_gen.load_state_dict(checkpoint["state_dict_gen"])
+        self.model_disc.load_state_dict(checkpoint["state_dict_disc"])
 
         # load optimizer state from checkpoint only when optimizer type is not changed.
         if (
-                checkpoint["config"]["optimizer"] != self.config["optimizer"] or
-                checkpoint["config"]["lr_scheduler"] != self.config["lr_scheduler"]
+                checkpoint["config"]["optimizer_gen"] != self.config["optimizer_gen"] or
+                checkpoint["config"]["optimizer_disc"] != self.config["optimizer_disc"] or
+                checkpoint["config"]["lr_scheduler_gen"] != self.config["lr_scheduler_gen"] or
+                checkpoint["config"]["lr_scheduler_disc"] != self.config["lr_scheduler_disc"]
         ):
             self.logger.warning(
                 "Warning: Optimizer or lr_scheduler given in config file is different "
                 "from that of checkpoint. Optimizer parameters not being resumed."
             )
         else:
-            self.optimizer.load_state_dict(checkpoint["optimizer"])
+            self.optimizer_gen.load_state_dict(checkpoint["optimizer_gen"])
+            self.optimizer_disc.load_state_dict(checkpoint["optimizer_disc"])
 
         self.logger.info(
             "Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch)
@@ -207,12 +219,16 @@ class BaseTrainer:
         # self.mnt_best = checkpoint["monitor_best"] 
 
         # load architecture params from checkpoint.
-        if checkpoint["config"]["arch"] != self.config["arch"]:
+        if (
+            checkpoint["config"]["arch_gen"] != self.config["arch_gen"] or
+            checkpoint["config"]["arch_disc"] != self.config["arch_disc"]
+        ):
             self.logger.warning(
                 "Warning: Architecture configuration given in config file is different from that "
                 "of checkpoint. This may yield an exception while state_dict is being loaded."
             )
-        self.model.load_state_dict(checkpoint["state_dict"])
+        self.model_gen.load_state_dict(checkpoint["state_dict_gen"])
+        self.model_disc.load_state_dict(checkpoint["state_dict_disc"])
 
         self.logger.info(
             "Checkpoint loaded."
