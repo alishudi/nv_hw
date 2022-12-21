@@ -55,7 +55,7 @@ class MRF(nn.Module):
 class Generator(nn.Module):
     def __init__(self, D_r, K_r, k_u, h_u):
         super(Generator, self).__init__()
-        self.conv_in = weight_norm(nn.Conv1d(80, h_u, 7, 1, padding=3))
+        self.conv_in = weight_norm(nn.Conv1d(80, h_u, 7, 1, padding='same'))
             # in_channels=80,
             # out_channels=h_u,
             # kernel_size=7,
