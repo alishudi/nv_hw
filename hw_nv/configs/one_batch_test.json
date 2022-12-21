@@ -65,7 +65,7 @@
     "type": "DiscriminatorLoss",
     "args": {}
   },
-  "lr_scheduler_den": {
+  "lr_scheduler_gen": {
     "type": "ExponentialLR",
     "args": {
       "gamma": 0.99
