@@ -139,7 +139,7 @@ class Trainer(BaseTrainer):
             raise NotImplementedError
 
         #training discriminator
-        batch["true_mels"] = self.melspec(batch["true_wavs"]).squeeze(dim=1)
+        batch["true_mels"] = self.melspec(batch["true_wavs"])#.squeeze(dim=1)
         batch["gen_wavs"] = self.model_gen(batch["true_mels"])
         batch["gen_mels"] = self.melspec(batch["gen_wavs"])
 

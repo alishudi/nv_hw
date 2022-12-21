@@ -58,7 +58,7 @@ class Generator(nn.Module):
         self.conv_in = weight_norm(nn.Conv1d(
             in_channels=80,
             out_channels=h_u,
-            kernel_size=(7,1),
+            kernel_size=7,
             dilation=1,
             padding='same'
             ))
