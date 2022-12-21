@@ -80,13 +80,13 @@ class Generator(nn.Module):
         in_channels = h_u
         out_channels = h_u // (2)
         self.l1 = (nn.LeakyReLU(0.1))
-        self.l2 = weight_norm(nn.ConvTranspose1d(
+        self.l2 = nn.ConvTranspose1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=(k_u[0],1),
                 stride=k_u[0]//2,
                 padding=(k_u[0]-k_u[0]//2)//2
-            ))
+            )
         self.l3 = MRF(out_channels, D_r, K_r)
         in_channels = out_channels
         out_channels = out_channels // (2)
