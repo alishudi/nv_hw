@@ -55,13 +55,13 @@ class MRF(nn.Module):
 class Generator(nn.Module):
     def __init__(self, D_r, K_r, k_u, h_u):
         super(Generator, self).__init__()
-        self.conv_in = weight_norm(nn.Conv1d(80, h_u, 7, 1, padding='same'))
-            # in_channels=80,
-            # out_channels=h_u,
-            # kernel_size=7,
-            # dilation=1,
-            # padding='same'
-            # ))
+        self.conv_in = weight_norm(nn.Conv1d(
+            in_channels=80,
+            out_channels=h_u,
+            kernel_size=7,
+            stride=1,
+            padding='same'
+            ))
 
         layers = []
         for l in range(len(k_u)):
@@ -72,7 +72,7 @@ class Generator(nn.Module):
                 in_channels=out_channels * 2,
                 out_channels=out_channels,
                 kernel_size=(k_u[l],1),
-                stride=(k_u[l]//2,1)
+                stride=k_u[l]//2
             )))
             layers.append(MRF(out_channels, D_r, K_r))
         self.blocks = nn.Sequential(*layers)
