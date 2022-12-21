@@ -61,7 +61,7 @@ class Trainer(BaseTrainer):
 
         self.test_paths = ['test_audio/audio_1.wav', 'test_audio/audio_2.wav', 'test_audio/audio_3.wav']
         self.test_wavs = [torchaudio.load(path)[0] for path in self.test_paths]
-        self.test_mels = [self.melspec(wav) for wav in self.test_wavs]
+        self.test_mels = [self.melspec(wav.to(device)) for wav in self.test_wavs]
 
     @staticmethod
     def move_batch_to_device(batch, device: torch.device):
