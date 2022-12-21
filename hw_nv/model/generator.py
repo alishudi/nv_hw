@@ -88,7 +88,9 @@ class Generator(nn.Module):
 
     def forward(self, x):
         x = self.conv_in(x)
+        print(f'pre up shape {x.shape}')
         x = self.blocks(x)
+        print(f'post up shape {x.shape}')
         x = F.tanh(self.conv_out(F.leaky_relu(x, 0.1)))
         return x
 
