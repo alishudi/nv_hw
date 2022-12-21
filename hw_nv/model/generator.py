@@ -63,42 +63,42 @@ class Generator(nn.Module):
             padding='same'
             ))
 
-        # layers = []
-        # for l in range(len(k_u)):
-        #     out_channels = h_u // (2 ** (l+1))
-        #     layers.append(nn.LeakyReLU(0.1))
-        #     layers.append(weight_norm(nn.ConvTranspose1d(
-        #         in_channels=out_channels * 2,
-        #         out_channels=out_channels,
-        #         kernel_size=(k_u[l],1),
-        #         stride=k_u[l]//2,
-        #         padding=(k_u[l]-k_u[l]//2)//2
-        #     )))
-        #     layers.append(MRF(out_channels, D_r, K_r))
-        # self.blocks = nn.Sequential(*layers)
-
-        in_channels = h_u
-        out_channels = h_u // (2)
-        self.l1 = (nn.LeakyReLU(0.1))
-        self.l2 = nn.ConvTranspose1d(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=(k_u[0],1),
-                stride=k_u[0]//2,
-                padding=(k_u[0]-k_u[0]//2)//2
-            )
-        self.l3 = MRF(out_channels, D_r, K_r)
-        in_channels = out_channels
-        out_channels = out_channels // (2)
-        self.l4 = (nn.LeakyReLU(0.1))
-        self.l5 = weight_norm(nn.ConvTranspose1d(
+        layers = []
+        for l in range(len(k_u)):
+            out_channels = h_u // (2 ** (l+1))
+            layers.append(nn.LeakyReLU(0.1))
+            layers.append(weight_norm(nn.ConvTranspose1d(
                 in_channels=out_channels * 2,
                 out_channels=out_channels,
-                kernel_size=(k_u[1],1),
-                stride=k_u[1]//2,
-                padding=(k_u[1]-k_u[1]//2)//2
-            ))
-        self.l6 = MRF(out_channels, D_r, K_r)
+                kernel_size=(k_u[l],),
+                stride=k_u[l]//2,
+                padding=(k_u[l]-k_u[l]//2)//2
+            )))
+            layers.append(MRF(out_channels, D_r, K_r))
+        self.blocks = nn.Sequential(*layers)
+
+        # in_channels = h_u
+        # out_channels = h_u // (2)
+        # self.l1 = (nn.LeakyReLU(0.1))
+        # self.l2 = weight_norm(nn.ConvTranspose1d(
+        #         in_channels=in_channels,
+        #         out_channels=out_channels,
+        #         kernel_size=(k_u[0],1),
+        #         stride=k_u[0]//2,
+        #         padding=(k_u[0]-k_u[0]//2)//2
+        #     ))
+        # self.l3 = MRF(out_channels, D_r, K_r)
+        # in_channels = out_channels
+        # out_channels = out_channels // (2)
+        # self.l4 = (nn.LeakyReLU(0.1))
+        # self.l5 = weight_norm(nn.ConvTranspose1d(
+        #         in_channels=out_channels * 2,
+        #         out_channels=out_channels,
+        #         kernel_size=(k_u[1],1),
+        #         stride=k_u[1]//2,
+        #         padding=(k_u[1]-k_u[1]//2)//2
+        #     ))
+        # self.l6 = MRF(out_channels, D_r, K_r)
 
 
         self.conv_out = weight_norm(nn.Conv1d(
@@ -110,21 +110,7 @@ class Generator(nn.Module):
 
 
     def forward(self, x):
-        print(f'pre conv shape {x.shape}')
         x = self.conv_in(x)
-        print(f'0 conv shape {x.shape}')
-        x = self.l1(x)
-        print(f'1 conv shape {x.shape}')
-        x = self.l2(x)
-        print(f'2 conv shape {x.shape}')
-        x = self.l3(x)
-        print(f'3 conv shape {x.shape}')
-        x = self.l4(x)
-        print(f'4 conv shape {x.shape}')
-        x = self.l5(x)
-        print(f'5 conv shape {x.shape}')
-        x = self.l6(x)
-        print(f'6 conv shape {x.shape}')
         x = self.blocks(x)
         x = F.tanh(self.conv_out(F.leaky_relu(x, 0.1)))
         return x
