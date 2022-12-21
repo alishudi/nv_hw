@@ -3,7 +3,6 @@ from operator import xor
 from torch.utils.data import ConcatDataset, DataLoader
 
 import hw_nv.datasets
-from hw_nv import batch_sampler as batch_sampler_module
 # from hw_nv.collate_fn.collate import collate_fn
 from hw_nv.utils.parse_config import ConfigParser
 
