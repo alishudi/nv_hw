@@ -11,7 +11,7 @@ class GeneratorLoss(nn.Module):
                 mpd_t_fmaps, msd_t_fmaps, **batch):
 
         adv_loss = 0
-        for subdiscr_preds in mpd_f_preds + msd_f_preds: #discriminators return list of preds of all subdiscriminators need to sum them
+        for subdiscr_preds in mpd_f_preds + msd_f_preds: #discriminators return list of preds of all subdiscriminators, need to sum them
             adv_loss += torch.mean(torch.square(subdiscr_preds - 1))
         
         mel_loss = self.l1_loss(gen_mels, true_mels)

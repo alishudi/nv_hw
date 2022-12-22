@@ -151,7 +151,6 @@ class Trainer(BaseTrainer):
         batch["gen_wavs"] = self.model_gen(batch["true_mels"])
         batch["gen_mels"] = self.melspec(batch["gen_wavs"])
 
-        # if is_train:
         self.optimizer_disc.zero_grad()
 
         batch["mpd_f_preds"], batch["msd_f_preds"], batch["mpd_t_preds"], batch["msd_t_preds"],\
@@ -171,7 +170,7 @@ class Trainer(BaseTrainer):
             = self.model_disc(batch["true_wavs"], batch["gen_wavs"])
         
         batch["adv_loss"], batch["mel_loss"], batch["fm_loss"] = self.criterion_gen(**batch)
-        batch["gen_loss"] = batch["adv_loss"] + 2 * batch["fm_loss"] + 45 * batch["mel_loss"]
+        batch["gen_loss"] = batch["adv_loss"] + 2 * batch["fm_loss"] + 0 * batch["mel_loss"]
         batch["gen_loss"].backward()
         self._clip_grad_norm()
         self.optimizer_gen.step()
