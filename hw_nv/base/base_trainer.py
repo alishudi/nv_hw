@@ -215,7 +215,6 @@ class BaseTrainer:
         # self.mnt_best = checkpoint["monitor_best"] 
 
         # load architecture params from checkpoint.
-        print(checkpoint["config"])
         if (
             checkpoint["config"]["arch"] != self.config["arch"]
         ):

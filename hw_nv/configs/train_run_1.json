@@ -78,7 +78,7 @@
     }
   },
   "trainer": {
-    "epochs": 200,
+    "epochs": 50,
     "save_dir": "saved/",
     "save_period": 5,
     "verbosity": 2,
@@ -86,6 +86,6 @@
     "early_stop": 1000,
     "visualize": "wandb",
     "wandb_project": "nv_project",
-    "grad_norm_clip": 100
+    "grad_norm_clip": 1e6
   }
 }
