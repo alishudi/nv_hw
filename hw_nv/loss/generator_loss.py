@@ -20,8 +20,7 @@ class GeneratorLoss(nn.Module):
         fm_loss = 0
         for subdiscr_f_fmap, subdiscr_t_fmap in zip(gen_fmaps, true_fmaps):
             for f_layer, t_layer in zip(subdiscr_f_fmap, subdiscr_t_fmap):
-                # fm_loss += self.l1_loss(f_layer, t_layer)
-                fm_loss += torch.mean(torch.abs(f_layer - t_layer))
+                fm_loss += self.l1_loss(f_layer, t_layer)
 
         return adv_loss, mel_loss, fm_loss
 

@@ -3,6 +3,11 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn.utils import weight_norm, remove_weight_norm
 
+def init_weights(m, mean=0.0, std=0.01): #just copied from authors code
+    classname = m.__class__.__name__
+    if classname.find("Conv") != -1:
+        m.weight.data.normal_(mean, std)
+
 class ResBlock(nn.Module): 
     #authors use weight_norm in their implementation, so do i
     def __init__(self, channels, d_r, k_r):
@@ -20,6 +25,7 @@ class ResBlock(nn.Module):
                             padding='same'
                         )))
         self.resblock = nn.ModuleList(layers)
+        self.resblock.apply(init_weights) #initing in generator should be enough but i dont want to risks
 
     def forward(self, x):
         i = 0
@@ -76,6 +82,7 @@ class Generator(nn.Module):
             )))
             layers.append(MRF(out_channels, D_r, K_r))
         self.blocks = nn.Sequential(*layers)
+        self.blocks.apply(init_weights)
 
 
         self.conv_out = weight_norm(nn.Conv1d(
@@ -84,6 +91,7 @@ class Generator(nn.Module):
                 kernel_size=(7,),
                 padding='same'
                 ))
+        self.conv_out.apply(init_weights)
 
 
     def forward(self, x):

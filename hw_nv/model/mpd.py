@@ -15,7 +15,7 @@ class MPD_subdiscr(nn.Module):
                 in_channels=CHANNELS[l],
                 out_channels=CHANNELS[l+1],
                 kernel_size=(5,1),
-                stride=(3,1) if l!=4 else 1,
+                stride=(3,1) if l!=4 else (1,1),
                 padding=(2,0)
             )))
         self.last_conv = weight_norm(nn.Conv2d(
