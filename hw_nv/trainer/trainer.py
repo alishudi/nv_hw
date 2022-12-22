@@ -123,7 +123,6 @@ class Trainer(BaseTrainer):
                 self.writer.add_scalar(
                     "learning rate", self.lr_scheduler_gen.get_last_lr()[0]
                 )
-                print(batch["true_mels"].shape)
                 self._log_spectrogram(batch["true_mels"])
                 self._log_spectrogram(batch["gen_mels"])
                 self._log_scalars(self.train_metrics)
@@ -207,6 +206,7 @@ class Trainer(BaseTrainer):
 
     def _log_spectrogram(self, spectrogram_batch):
         spectrogram = random.choice(spectrogram_batch.cpu())
+        print(spectrogram.shape)
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram.detach().numpy().transpose(-1, -2)))
         self.writer.add_image("spectrogram", ToTensor()(image))
 
