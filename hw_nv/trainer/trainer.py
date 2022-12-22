@@ -197,9 +197,9 @@ class Trainer(BaseTrainer):
         for i, mel in enumerate(self.test_mels):
             gen_wav = self.model_gen(mel)
             self.writer.add_audio(f"audio_{i}", gen_wav, sample_rate=22050)
-            mel = self.melspec(gen_wav)
-            image = PIL.Image.open(plot_spectrogram_to_buf(mel.detach().cpu().numpy().squeeze(0).transpose(-1, -2)))
-            self.writer.add_image(f'melspec_{i}', ToTensor()(image))
+            # mel = self.melspec(gen_wav)
+            # image = PIL.Image.open(plot_spectrogram_to_buf(mel.detach().cpu().numpy().squeeze(0).transpose(-1, -2)))
+            # self.writer.add_image(f'melspec_{i}', ToTensor()(image))
         return
 
 
