@@ -1,15 +1,6 @@
 {
   "name": "train_run_1",
   "n_gpu": 1,
-  "preprocessing": {
-    "sr": 22500,
-    "spectrogram": {
-      "type": "MelSpectrogram",
-      "args": {
-      }
-    },
-    "log_spec": true
-  },
   "arch": {
     "generator": {
       "type": "Generator",
