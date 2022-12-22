@@ -205,8 +205,7 @@ class Trainer(BaseTrainer):
 
 
     def _log_spectrogram(self, spectrogram_batch):
-        spectrogram = random.choice(spectrogram_batch.cpu())
-        print(spectrogram.shape)
+        spectrogram = random.choice(spectrogram_batch.cpu()).squeeze(0)
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram.detach().numpy().transpose(-1, -2)))
         self.writer.add_image("spectrogram", ToTensor()(image))
 
