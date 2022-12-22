@@ -61,7 +61,7 @@ def main(config):
     trainable_params_gen = filter(lambda p: p.requires_grad, generator.parameters())
     optimizer_gen = config.init_obj(config["optimizer_gen"], torch.optim, trainable_params_gen)
     trainable_params_disc = filter(lambda p: p.requires_grad, discriminator.parameters())
-    optimizer_disc = config.init_obj(config["optimizer_gen"], torch.optim, trainable_params_disc)
+    optimizer_disc = config.init_obj(config["optimizer_disc"], torch.optim, trainable_params_disc)
 
     lr_scheduler_gen = config.init_obj(config["lr_scheduler_gen"], torch.optim.lr_scheduler, optimizer_gen)
     lr_scheduler_disc = config.init_obj(config["lr_scheduler_disc"], torch.optim.lr_scheduler, optimizer_disc)
