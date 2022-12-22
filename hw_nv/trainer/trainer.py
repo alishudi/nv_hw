@@ -122,8 +122,8 @@ class Trainer(BaseTrainer):
                     "learning rate", self.lr_scheduler_gen.get_last_lr()[0]
                 )
                 if batch_idx % 1000 == 0:
-                    self._log_spectrogram(batch["true_mels"])
-                    self._log_spectrogram(batch["gen_mels"])
+                    self._log_spectrogram(batch["true_mels"], name="true")
+                    self._log_spectrogram(batch["gen_mels"], name="gen")
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
                 # because we are interested in recent train metrics
@@ -205,10 +205,10 @@ class Trainer(BaseTrainer):
 
 
 
-    def _log_spectrogram(self, spectrogram_batch):
+    def _log_spectrogram(self, spectrogram_batch, name=''):
         spectrogram = random.choice(spectrogram_batch.cpu()).squeeze(0)
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram.detach().numpy().transpose(-1, -2)))
-        self.writer.add_image("spectrogram", ToTensor()(image))
+        self.writer.add_image(name+"spectrogram", ToTensor()(image))
 
     @torch.no_grad()
     def get_grad_norm(self, model, norm_type=2):
