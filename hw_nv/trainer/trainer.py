@@ -123,6 +123,7 @@ class Trainer(BaseTrainer):
                 self.writer.add_scalar(
                     "learning rate", self.lr_scheduler_gen.get_last_lr()[0]
                 )
+                print(batch["true_mels"].shape)
                 self._log_spectrogram(batch["true_mels"])
                 self._log_spectrogram(batch["gen_mels"])
                 self._log_scalars(self.train_metrics)
