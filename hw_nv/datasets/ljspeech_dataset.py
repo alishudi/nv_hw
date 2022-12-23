@@ -4,7 +4,6 @@ import os
 from hw_nv.utils import ROOT_PATH
 
 import numpy as np
-import torch
 import torch.nn.functional as F
 import torchaudio
 import time
@@ -15,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class LJspeechDataset(Dataset):
+    """
+    Class for preloaded LJspeech dataset
+    """
     def __init__(self, config_parser: ConfigParser, segment_size):
         self.data_dir = ROOT_PATH / "data" / "wavs"
         self.buffer = self.get_data_to_buffer()

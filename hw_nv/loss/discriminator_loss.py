@@ -3,6 +3,9 @@ import torch.nn as nn
 
 
 class DiscriminatorLoss(nn.Module):
+    """
+    Class for calculation of GAN losses for MPD and MSD discriminators
+    """
     def __init__(self):
         super().__init__()
         self.l1_loss = nn.L1Loss()
