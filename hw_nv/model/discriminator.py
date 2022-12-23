@@ -4,6 +4,9 @@ from hw_nv.model.msd import MSD
 
 
 class Discriminator(nn.Module):
+    """
+    Class for combinig discriminators
+    """
     def __init__(self, periods):
         super(Discriminator, self).__init__()
         self.mpd = MPD(periods)

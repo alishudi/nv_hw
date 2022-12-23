@@ -100,7 +100,10 @@ class Trainer(BaseTrainer):
             except RuntimeError as e:
                 if "out of memory" in str(e) and self.skip_oom:
                     self.logger.warning("OOM on batch. Skipping batch.")
-                    for p in self.model.parameters():
+                    for p in self.model_gen.parameters():
+                        if p.grad is not None:
+                            del p.grad  # free some memory
+                    for p in self.model_disc.parameters():
                         if p.grad is not None:
                             del p.grad  # free some memory
                     torch.cuda.empty_cache()
@@ -129,6 +132,7 @@ class Trainer(BaseTrainer):
                 self.train_metrics.reset()
             if batch_idx >= self.len_epoch:
                 break
+
         log = last_train_metrics
         self.model_gen.eval()
         self.model_disc.eval()
@@ -139,9 +143,10 @@ class Trainer(BaseTrainer):
         return log
 
     def process_batch(self, batch, is_train: bool, metrics: MetricTracker):
-        batch = self.move_batch_to_device(batch, self.device)
         if is_train == False:
             raise NotImplementedError
+        
+        batch = self.move_batch_to_device(batch, self.device)
 
         #training discriminator
         batch["true_mels"] = self.melspec(batch["true_wavs"]).squeeze(dim=1)

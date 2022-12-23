@@ -9,7 +9,11 @@ def init_weights(m, mean=0.0, std=0.01): #just copied from authors code
         m.weight.data.normal_(mean, std)
 
 class ResBlock(nn.Module): 
-    #authors use weight_norm in their implementation, so do i
+    """
+    Residual block for MRF module of generator
+
+    authors use weight_norm in their implementation, so do i
+    """
     def __init__(self, channels, d_r, k_r):
         super(ResBlock, self).__init__()
         self.d_r = d_r
@@ -25,7 +29,6 @@ class ResBlock(nn.Module):
                             padding='same'
                         )))
         self.resblock = nn.ModuleList(layers)
-        self.resblock.apply(init_weights) #initing in generator should be enough but i dont want to risks
 
     def forward(self, x):
         i = 0
@@ -44,6 +47,9 @@ class ResBlock(nn.Module):
 
 
 class MRF(nn.Module):
+    """
+    Multi-Receptive Field Fusion module of generator
+    """
     def __init__(self, channels, D_r, K_r):
         super(MRF, self).__init__()
         self.resblocks = nn.ModuleList([ResBlock(channels, d_r, k_r) for d_r, k_r in zip(D_r, K_r)])
@@ -59,6 +65,9 @@ class MRF(nn.Module):
 
 
 class Generator(nn.Module):
+    """
+    Generator
+    """
     def __init__(self, D_r, K_r, k_u, h_u):
         super(Generator, self).__init__()
         self.conv_in = weight_norm(nn.Conv1d(

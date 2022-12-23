@@ -13,7 +13,8 @@ class GeneratorLoss(nn.Module):
     def forward(self, mpd_f_preds, msd_f_preds, gen_mels, true_mels, mpd_f_fmaps, msd_f_fmaps,
                 mpd_t_fmaps, msd_t_fmaps, **batch):
         """
-        
+        Calculates generator losses for a given batch
+        :return: GAN loss, Mel-Spectrogram loss, Feature Matching loss
         """
         adv_loss = 0
         for subdiscr_preds in mpd_f_preds + msd_f_preds: 

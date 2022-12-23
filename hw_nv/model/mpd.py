@@ -5,6 +5,9 @@ from torch.nn.utils import weight_norm
 CHANNELS = [1, 32, 128, 512, 1024, 1024] #took channels sizes from authors code, its different from ones in the paper
 
 class MPD_subdiscr(nn.Module):
+    """
+    Sub-discriminator block of MPD
+    """
     def __init__(self, p):
         super(MPD_subdiscr, self).__init__()
         self.p = p
@@ -41,6 +44,9 @@ class MPD_subdiscr(nn.Module):
 
 
 class MPD(nn.Module):
+    """
+    Multi-Period Discriminator
+    """
     def __init__(self, periods=[2, 3, 5, 7, 11]):
         super(MPD, self).__init__()
         self.subdiscriminators = nn.ModuleList([MPD_subdiscr(p) for p in periods])

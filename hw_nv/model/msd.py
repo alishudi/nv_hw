@@ -4,6 +4,9 @@ from torch.nn.utils import weight_norm, spectral_norm
 
 
 class MSD_subdiscr(nn.Module):
+    """
+    Sub-discriminator block of MSD
+    """
     def __init__(self, norm):
         super(MSD_subdiscr, self).__init__()
         self.layers = nn.ModuleList([ #just copied authors code here because parameters are different from those in MelGAN paper
@@ -28,6 +31,9 @@ class MSD_subdiscr(nn.Module):
 
 
 class MSD(nn.Module):
+    """
+    Multi-Scale Discriminator
+    """
     def __init__(self):
         super(MSD, self).__init__()
         self.subdiscriminators = nn.ModuleList([

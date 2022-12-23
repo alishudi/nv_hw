@@ -11,6 +11,9 @@ class DiscriminatorLoss(nn.Module):
         self.l1_loss = nn.L1Loss()
 
     def forward(self, mpd_t_preds, msd_t_preds, mpd_f_preds, msd_f_preds, **batch):
+        """
+        Calculates GAN losses for a given batch
+        """
 
         mpd_loss = 0
         for subdiscr_t_pred, subdiscr_f_pred in zip(mpd_t_preds, mpd_f_preds): #iterating over preds of subdiscriminators
