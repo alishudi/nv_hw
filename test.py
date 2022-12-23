@@ -55,7 +55,7 @@ def main(config, out_file):
 
     with torch.no_grad():
         for i, mel in tqdm(enumerate(test_mels)):
-                gen_wav = generator(mel).squeeze(0)
+                gen_wav = generator(mel).squeeze(0).cpu()
                 path = ROOT_PATH / "results" / f"generated_audio_{i+1}.wav"
                 torchaudio.save(str(path), gen_wav, sample_rate=22050)
 
