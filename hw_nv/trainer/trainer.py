@@ -1,9 +1,7 @@
 import random
 
 import PIL
-# import pandas as pd
 import torch
-# import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 from torchvision.transforms import ToTensor
 from tqdm import tqdm

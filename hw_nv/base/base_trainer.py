@@ -3,7 +3,6 @@ from abc import abstractmethod
 import torch
 from numpy import inf
 
-from hw_nv.base import BaseModel
 from hw_nv.logger import get_visualizer
 
 
@@ -12,7 +11,7 @@ class BaseTrainer:
     Base class for all trainers
     """
 
-    def __init__(self, model_gen: BaseModel, model_disc: BaseModel, criterion_gen, criterion_disc,
+    def __init__(self, model_gen, model_disc, criterion_gen, criterion_disc,
                 optimizer_gen, optimizer_disc, config, device):
         self.device = device
         self.config = config
