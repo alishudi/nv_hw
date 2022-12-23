@@ -32,18 +32,15 @@ def main(config):
     dataloaders = get_dataloaders(config)
 
     # build model architecture, then print to console
-    # model = config.init_obj(config["arch"], module_arch) #TODO clear old code
     generator = config.init_obj(config["arch"]["generator"], module_arch)
     discriminator = config.init_obj(config["arch"]["discriminator"], module_arch)
     # logger.info(generator)
 
     # prepare for (multi-device) GPU training
     device, device_ids = prepare_device(config["n_gpu"])
-    # model = model.to(device)
     generator = generator.to(device)
     discriminator = discriminator.to(device)
     if len(device_ids) > 1:
-        # model = torch.nn.DataParallel(model, device_ids=device_ids)
         generator = torch.nn.DataParallel(generator, device_ids=device_ids)
         discriminator = torch.nn.DataParallel(discriminator, device_ids=device_ids)
 
@@ -52,12 +49,8 @@ def main(config):
     loss_module_disc = config.init_obj(config["loss_disc"], module_loss).to(device)
 
 
-    #creating dir for generated audio samples
-    os.makedirs("results", exist_ok=True)
-
     # build optimizer, learning rate scheduler. delete every line containing lr_scheduler for
     # disabling scheduler
-    # trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     trainable_params_gen = filter(lambda p: p.requires_grad, generator.parameters())
     optimizer_gen = config.init_obj(config["optimizer_gen"], torch.optim, trainable_params_gen)
     trainable_params_disc = filter(lambda p: p.requires_grad, discriminator.parameters())

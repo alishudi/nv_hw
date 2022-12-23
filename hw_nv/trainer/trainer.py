@@ -194,6 +194,10 @@ class Trainer(BaseTrainer):
         return base.format(current, total, 100.0 * current / total)
 
     def _log_predictions(self):
+        """
+        Function for logging predicted wavs and their melspectrograms
+        for a samples from a test set
+        """
         if self.writer is None:
             return
         for i, mel in enumerate(self.test_mels):

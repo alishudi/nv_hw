@@ -5,15 +5,13 @@ from pathlib import Path
 
 import torch
 from tqdm import tqdm
+import torchaudio
 
 import hw_nv.model as module_model
-from hw_nv.trainer import Trainer
 from hw_nv.utils import ROOT_PATH
-from hw_nv.utils.object_loading import get_dataloaders
 from hw_nv.utils.parse_config import ConfigParser
-from hw_nv.utils import get_WaveGlow
-from hw_nv.synthesis import synthesis
 from hw_nv.logger import get_visualizer
+from hw_nv.utils.melspectrogram import MelSpectrogram, MelSpectrogramConfig
 
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
@@ -25,61 +23,41 @@ def main(config, out_file):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # build model architecture
-    model = config.init_obj(config["arch"], module_model)
+    # model = config.init_obj(config["arch"], module_model) #TODO clear old code
+    generator = config.init_obj(config["arch"]["generator"], module_model)
     # logger.info(model)
 
     logger.info("Loading checkpoint: {} ...".format(config.resume))
     checkpoint = torch.load(config.resume, map_location=device)
-    state_dict = checkpoint["state_dict"]
+    state_dict = checkpoint["state_dict_gen"]
     if config["n_gpu"] > 1:
         model = torch.nn.DataParallel(model)
-    model.load_state_dict(state_dict)
+    generator.load_state_dict(state_dict)
 
     # prepare model for testing
-    model = model.to(device)
-    model.eval()
+    generator = generator.to(device)
+    generator.eval()
+    
+    #creating dir for generated audio samples
+    os.makedirs("results", exist_ok=True)
 
-    #loading pretrained WaveGlow model
-    waveglow = get_WaveGlow()
-    waveglow = waveglow.cuda()
-
+    #loading test data
     #TODO add custom test sample support
-    test_samples = [
-            "A defibrillator is a device that gives a high energy electric shock to the heart of someone who is in cardiac arrest",
-            "Massachusetts Institute of Technology may be best known for its math, science and engineering education", 
-            "Wasserstein distance or Kantorovich Rubinstein metric is a distance function defined between probability distributions on a given metric space"
-            ]
-    encoded_test = list(text_to_sequence(test, ['english_cleaners']) for test in test_samples)
+    melspec = MelSpectrogram(MelSpectrogramConfig, device)
+    test_paths = ['test_audio/audio_1.wav', 'test_audio/audio_2.wav', 'test_audio/audio_3.wav']
+    test_wavs = [torchaudio.load(path)[0] for path in test_paths]
+    test_mels = [melspec(wav.to(device)) for wav in test_wavs]
+
 
     logger = config.get_logger("trainer")
-    cfg_trainer = config["trainer"]
-    writer = get_visualizer(config, logger, cfg_trainer["visualize"])
+    # cfg_trainer = config["trainer"]
+    # writer = get_visualizer(config, logger, cfg_trainer["visualize"])
 
     with torch.no_grad():
-        for i, phn in tqdm(enumerate(encoded_test)):
-                mel, path = synthesis(model, phn, device, waveglow, i)
-                name = f'track={i} speed={1} energy={1} pitch={1}'
-                writer.add_audio('audio ' + name, path, sample_rate=22050)
-        for energy in [0.8, 1.2]:
-            for i, phn in tqdm(enumerate(encoded_test)):
-                mel, path = synthesis(model, phn, device, waveglow, i, alpha_e=energy)
-                name = f'track={i} speed={1} energy={energy} pitch={1}'
-                writer.add_audio('audio ' + name, path, sample_rate=22050)
-        for speed in [0.8, 1.2]:
-            for i, phn in tqdm(enumerate(encoded_test)):
-                mel, path = synthesis(model, phn, device, waveglow, i, speed=speed)
-                name = f'track={i} speed={2-speed} energy={1} pitch={1}'
-                writer.add_audio('audio ' + name, path, sample_rate=22050)
-        for pitch in [0.8, 1.2]:
-            for i, phn in tqdm(enumerate(encoded_test)):
-                mel, path = synthesis(model, phn, device, waveglow, i, alpha_p=pitch)
-                name = f'track={i} speed={1} energy={1} pitch={pitch}'
-                writer.add_audio('audio ' + name, path, sample_rate=22050)
-        for three in [0.8, 1.2]:
-            for i, phn in tqdm(enumerate(encoded_test)):
-                mel, path = synthesis(model, phn, device, waveglow, i, speed=(2-three), alpha_e=three, alpha_p=three)
-                name = f'track={i} speed={three} energy={three} pitch={three}'
-                writer.add_audio('audio ' + name, path, sample_rate=22050)
+        for i, mel in tqdm(enumerate(test_mels)):
+                gen_wav = generator(mel).squeeze(0)
+                path = ROOT_PATH / "results" / f"generated_audio_{i+1}.wav"
+                torchaudio.save(str(path), gen_wav, sample_rate=22050)
 
 
     
